@@ -1,5 +1,7 @@
 # Security Hub - Threat Intelligence SOC Dashboard 🛡️
 
+![Preview de Security Hub](screenshot.png)
+
 **Security Hub** es una plataforma de inteligencia de amenazas (Threat Intelligence) diseñada para analistas SOC L1. Permite monitorizar, gestionar y exportar vulnerabilidades reales (CVEs) en tiempo real consumiendo la API de NVD (National Vulnerability Database).
 
 Desarrollado por [Juan Jose Ranea](https://www.linkedin.com/in/juanjoseranea/).
