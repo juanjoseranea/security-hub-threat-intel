@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Hub - Centro de Mando</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        /* Temas */
+        body.light-theme {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent: #0284c7;
+        }
+
+        body.grayscale-theme {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --accent: #374151;
+            filter: grayscale(1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container { max-width: 1000px; width: 100%; }
+
+        header { text-align: center; margin-bottom: 3rem; position: relative; }
+        h1 { font-size: 3rem; margin: 0; background: linear-gradient(to right, var(--accent), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* Menú de Opciones */
+        .options-menu {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .theme-btn {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value { font-size: 2rem; font-weight: 600; color: var(--accent); display: block; }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .action-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .action-card:hover { transform: translateY(-8px); border-color: var(--accent); }
+
+        .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+
+        /* Centro de Exportación */
+        .export-section {
+            margin-top: 4rem;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .export-btns { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+        .export-btn {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .export-btn:hover { background: var(--accent); color: var(--bg-color); }
+    </style>
+</head>
+<body id="main-body">
+    <div class="container">
+        <header>
+            <div class="options-menu">
+                <button class="theme-btn" onclick="setTheme('dark')">🌙 Oscuro</button>
+                <button class="theme-btn" onclick="setTheme('light')">☀️ Claro</button>
+                <button class="theme-btn" onclick="setTheme('grayscale')">⚪ Gris</button>
+            </div>
+            <h1>Security Hub</h1>
+            <p style="color: var(--text-secondary)">Centro de Inteligencia SOC L1</p>
+        </header>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div style="background: rgba(34, 197, 94, 0.1); color: var(--success); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center; border: 1px solid var(--success);">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">{{ stats.total }}</span>
+                <span class="stat-label">Vulnerabilidades Totales</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" style="color: var(--danger)">{{ stats.severity.CRITICAL|default:0 }}</span>
+                <span class="stat-label">Críticas</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" style="color: var(--warning)">{{ stats.severity.HIGH|default:0 }}</span>
+                <span class="stat-label">Alta Prioridad</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" style="color: var(--success)">{{ stats.status.RESOLVED|default:0 }}</span>
+                <span class="stat-label">Resueltas</span>
+            </div>
+        </div>
+
+        <div class="actions-grid">
+            <a href="{% url 'dashboard' %}" class="action-card">
+                <div class="icon">🔍</div>
+                <h2>Explorar Amenazas</h2>
+                <p>Monitor de vulnerabilidades y gestión de incidentes.</p>
+            </a>
+
+            <form action="{% url 'sync' %}" method="post" style="display: contents;">
+                {% csrf_token %}
+                <button type="submit" class="action-card" style="background: none; font-family: inherit; width: 100%;">
+                    <div class="icon">🔄</div>
+                    <h2>Sincronizar API</h2>
+                    <p>Obtener últimos datos reales desde NVD (NIST).</p>
+                </button>
+            </form>
+
+            <a href="{% url 'status' %}" class="action-card">
+                <div class="icon">📊</div>
+                <h2>Salud del Sistema</h2>
+                <p>Logs de tareas de Celery y estado del trabajador.</p>
+            </a>
+        </div>
+
+        <div class="export-section">
+            <h3>📥 Exportar Reportes de Inteligencia</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Genera un archivo CSV con las amenazas detectadas en el periodo seleccionado.</p>
+            <div class="export-btns">
+                <a href="{% url 'export_csv' %}?days=7" class="export-btn">Últimos 7 días</a>
+                <a href="{% url 'export_csv' %}?days=14" class="export-btn">Últimos 14 días</a>
+                <a href="{% url 'export_csv' %}?days=30" class="export-btn">Últimos 30 días</a>
+                <a href="{% url 'export_csv' %}?days=all" class="export-btn" style="border-color: #818cf8; color: #818cf8;">Histórico Completo</a>
+            </div>
+        </div>
+    </div>
+
+    <footer style="margin-top: 5rem; padding: 2rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); width: 100%; color: var(--text-secondary); font-size: 0.9rem;">
+        Desarrollado por <a href="https://www.linkedin.com/in/juanjoseranea/" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">Juan Jose Ranea</a> | &copy; 2026 Security Hub SOC
+    </footer>
+
+    <script>
+        function setTheme(theme) {
+            const body = document.getElementById('main-body');
+            body.classList.remove('light-theme', 'grayscale-theme');
+            if (theme !== 'dark') {
+                body.classList.add(theme + '-theme');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Cargar tema guardado
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Amenazas - Security Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --critical: #ef4444;
+            --high: #f97316;
+            --medium: #f59e0b;
+            --low: #34d399;
+        }
+
+        body.light-theme {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent: #0284c7;
+        }
+
+        body.grayscale-theme {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --accent: #374151;
+            filter: grayscale(1);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-primary); 
+            margin: 0; 
+            padding: 2rem; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            transition: background 0.3s, color 0.3s;
+        }
+        .container { max-width: 1100px; width: 100%; }
+
+        header { margin-bottom: 2rem; }
+        h1 { font-size: 2rem; font-weight: 600; margin: 0; background: linear-gradient(to right, var(--accent), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .search-form { margin: 2rem 0; display: flex; gap: 1rem; }
+        .search-form input { flex: 1; padding: 0.8rem 1.2rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--card-bg); color: white; font-family: inherit; }
+        .search-form button { padding: 0.8rem 1.5rem; border-radius: 8px; border: none; background: var(--accent); color: var(--bg-color); font-weight: 600; cursor: pointer; }
+
+        .card { 
+            background: var(--card-bg); 
+            border-radius: 12px; 
+            padding: 1.5rem; 
+            margin-bottom: 1.5rem; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .severity-badge {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 6px;
+        }
+        .bg-critical { background-color: var(--critical); }
+        .bg-high { background-color: var(--high); }
+        .bg-medium { background-color: var(--medium); }
+        .bg-low { background-color: var(--low); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .cve-id { font-size: 1.25rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+
+        .score-box { background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 8px; text-align: center; }
+        .score-value { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
+
+        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        .status-form select { background: var(--bg-color); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem; border-radius: 4px; font-size: 0.85rem; }
+        .btn-nist { font-size: 0.85rem; color: var(--accent); text-decoration: none; border: 1px solid var(--accent); padding: 0.4rem 0.8rem; border-radius: 4px; }
+    </style>
+</head>
+<body id="main-body">
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>Monitor de Amenazas</h1>
+                <a href="{% url 'home' %}" style="color: var(--text-secondary); text-decoration: none;">← Volver al Inicio</a>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div style="background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #22c55e; width: 100%; text-align: center;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form class="search-form" action="{% url 'dashboard' %}" method="get">
+                <input type="text" name="q" placeholder="Buscar por CVE ID o descripción..." value="{{ query|default:'' }}">
+                <button type="submit">Buscar ahora</button>
+            </form>
+        </header>
+
+        {% for cve in cves %}
+        <div class="card">
+            <div class="severity-badge {% if cve.severity == 'CRITICAL' %}bg-critical{% elif cve.severity == 'HIGH' %}bg-high{% elif cve.severity == 'MEDIUM' %}bg-medium{% elif cve.severity == 'LOW' %}bg-low{% endif %}"></div>
+            
+            <div class="card-header">
+                <div>
+                    <a href="https://nvd.nist.gov/vuln/detail/{{ cve.cve_id }}" target="_blank" class="cve-id">{{ cve.cve_id }}</a>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Publicado: {{ cve.published_date }}</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-value">{{ cve.cvss_score }}</div>
+                    <div class="score-label">CVSS</div>
+                </div>
+            </div>
+
+            <p style="line-height: 1.6; color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">{{ cve.description }}</p>
+
+            <div class="card-footer">
+                <form action="{% url 'update_status' cve.pk %}" method="post" class="status-form">
+                    {% csrf_token %}
+                    <span style="font-size: 0.8rem; color: var(--text-secondary); margin-right: 0.5rem;">Gestión:</span>
+                    <select name="status" onchange="this.form.submit()">
+                        <option value="PENDING" {% if cve.status == 'PENDING' %}selected{% endif %}>Pendiente</option>
+                        <option value="INVESTIGATING" {% if cve.status == 'INVESTIGATING' %}selected{% endif %}>Investigando</option>
+                        <option value="FALSE_POSITIVE" {% if cve.status == 'FALSE_POSITIVE' %}selected{% endif %}>Falso Positivo</option>
+                        <option value="RESOLVED" {% if cve.status == 'RESOLVED' %}selected{% endif %}>Resuelto</option>
+                    </select>
+                </form>
+
+                <div style="display:flex; gap: 0.5rem;">
+                    <a href="https://nvd.nist.gov/vuln/detail/{{ cve.cve_id }}" target="_blank" class="btn-nist">Ver en NIST</a>
+                    <a href="https://www.exploit-db.com/search?cve={{ cve.cve_id }}" target="_blank" class="btn-nist" style="border-color: #f97316; color: #f97316;">Exploit-DB</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; color: var(--text-secondary); padding: 4rem;">No se encontraron amenazas.</div>
+        {% endfor %}
+    </div>
+
+    <footer style="margin-top: 5rem; padding: 2rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); width: 100%; color: var(--text-secondary); font-size: 0.9rem;">
+        Desarrollado por <a href="https://www.linkedin.com/in/juanjoseranea/" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">Juan Jose Ranea</a> | &copy; 2026 Security Hub SOC
+    </footer>
+
+    <script>
+        function setTheme(theme) {
+            const body = document.getElementById('main-body');
+            body.classList.remove('light-theme', 'grayscale-theme');
+            if (theme !== 'dark') {
+                body.classList.add(theme + '-theme');
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        }
+    </script>
+</body>
+</html>
