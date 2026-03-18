@@ -63,5 +63,4 @@ Para ejecutar el entorno SOC localmente:
 4. Iniciar Celery Beat: `celery -A security_hub beat --loglevel=info`
 
 ---
-**[SISTEMA DE ACCESO RESTRINGIDO - SOC L1 OPERATIONS]**  
 *Desarrollado para la gestión crítica de infraestructuras cibernéticas.*
