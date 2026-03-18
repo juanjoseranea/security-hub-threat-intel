@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Satus del Sistema - Celery</title>
+    <title>Estado del Sistema - Celery</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,6 +14,25 @@
             --accent: #38bdf8;
             --success: #22c55e;
             --danger: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-theme {
+            --bg-color: #ffffff;
+            --card-bg: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --accent: #024da1;
+            --border-color: #e2e8f0;
+        }
+
+        body.grayscale-theme {
+            --bg-color: #cbd5e1;
+            --card-bg: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --accent: #0f172a;
+            --border-color: #94a3b8;
         }
 
         body {
@@ -25,6 +44,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: all 0.3s ease;
         }
 
         .container {
@@ -56,23 +76,26 @@
             background: var(--card-bg);
             border-radius: 12px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
         }
 
         th, td {
             text-align: left;
             padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--border-color);
         }
 
         th {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.05);
             color: var(--text-secondary);
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.75rem;
             letter-spacing: 0.05em;
         }
+        
+        body.light-theme th { background: rgba(0, 0, 0, 0.03); }
+        body.grayscale-theme th { background: rgba(0, 0, 0, 0.03); }
 
         .status-pill {
             padding: 0.25rem 0.75rem;
@@ -123,5 +146,16 @@
             </tbody>
         </table>
     </div>
+    <script>
+        function setTheme(theme) {
+            const body = document.body;
+            body.classList.remove('light-theme', 'grayscale-theme');
+            if (theme !== 'dark') {
+                body.classList.add(theme + '-theme');
+            }
+        }
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) setTheme(savedTheme);
+    </script>
 </body>
 </html>

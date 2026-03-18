@@ -4,35 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor de Amenazas - Security Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent: #38bdf8;
-            --critical: #ef4444;
-            --high: #f97316;
+            --bg-color: #020408;
+            --bg-gradient: radial-gradient(circle at 50% 50%, #0d1117 0%, #020408 100%);
+            --card-bg: rgba(13, 17, 23, 0.7);
+            --card-hover: rgba(22, 27, 34, 0.9);
+            --input-bg: rgba(13, 17, 23, 0.8);
+            --text-primary: #ffffff;
+            --text-secondary: #cbd5e1;
+            --accent: #00f2ff;
+            --critical: #da3633;
+            --high: #d29922;
             --medium: #f59e0b;
-            --low: #34d399;
+            --low: #3fb950;
+            --border-color: #30363d;
+            --grid-color: rgba(0, 242, 255, 0.03);
+            --text-on-accent: #020408;
         }
 
         body.light-theme {
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
+            --bg-color: #ffffff;
+            --bg-gradient: none;
+            --card-bg: #f8fafc;
+            --card-hover: #f1f5f9;
+            --input-bg: #ffffff;
             --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --accent: #0284c7;
+            --text-secondary: #334155;
+            --accent: #024da1;
+            --border-color: #e2e8f0;
+            --grid-color: rgba(2, 77, 161, 0.05);
+            --text-on-accent: #ffffff;
         }
 
         body.grayscale-theme {
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #4b5563;
-            --accent: #374151;
-            filter: grayscale(1);
+            --bg-color: #cbd5e1;
+            --bg-gradient: none;
+            --card-bg: #e2e8f0;
+            --card-hover: #f1f5f9;
+            --input-bg: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --accent: #0f172a;
+            --border-color: #94a3b8;
+            --grid-color: rgba(0, 0, 0, 0.05);
+            --text-on-accent: #ffffff;
         }
 
         body { 
@@ -44,69 +62,151 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            transition: background 0.3s, color 0.3s;
+            transition: all 0.3s;
+            background: var(--bg-gradient);
+            background-color: var(--bg-color);
+            position: relative;
         }
-        .container { max-width: 1100px; width: 100%; }
 
-        header { margin-bottom: 2rem; }
-        h1 { font-size: 2rem; font-weight: 600; margin: 0; background: linear-gradient(to right, var(--accent), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: -1;
+        }
 
-        .search-form { margin: 2rem 0; display: flex; gap: 1rem; }
-        .search-form input { flex: 1; padding: 0.8rem 1.2rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--card-bg); color: white; font-family: inherit; }
-        .search-form button { padding: 0.8rem 1.5rem; border-radius: 8px; border: none; background: var(--accent); color: var(--bg-color); font-weight: 600; cursor: pointer; }
+        .container { max-width: 1100px; width: 100%; z-index: 1; }
+
+        header { margin-bottom: 3rem; border-left: 3px solid var(--accent); padding-left: 1rem; }
+        h1 { font-family: 'Fira Code', monospace; font-size: 1.8rem; margin: 0; color: var(--accent); letter-spacing: -1px; }
+
+        .search-form { margin: 2rem 0; display: flex; gap: 0; background: var(--input-bg); border: 1px solid var(--border-color); padding: 4px; clip-path: polygon(1% 0, 100% 0, 99% 100%, 0 100%); backdrop-filter: blur(5px); }
+        .search-form input { flex: 1; padding: 0.6rem 1rem; border: none; background: transparent; color: var(--text-primary); font-family: 'Fira Code', monospace; outline: none; font-size: 0.8rem; }
+        .search-form button { padding: 0.6rem 1.2rem; border: none; background: var(--accent); color: var(--text-on-accent); font-family: 'Fira Code', monospace; font-weight: 600; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); font-size: 0.75rem; transition: all 0.2s; }
+        .search-form button:hover { opacity: 0.9; box-shadow: 0 0 10px var(--accent); }
 
         .card { 
             background: var(--card-bg); 
-            border-radius: 12px; 
-            padding: 1.5rem; 
+            padding: 1.2rem; 
             margin-bottom: 1.5rem; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border: 1px solid var(--border-color); 
             position: relative;
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            clip-path: polygon(0 0, 98% 0, 100% 12%, 100% 100%, 2% 100%, 0 88%);
+            backdrop-filter: blur(5px);
         }
+        .card:hover { border-color: var(--accent); transform: translateX(5px); background: var(--card-hover); }
 
         .severity-badge {
             position: absolute;
             top: 0;
             left: 0;
             bottom: 0;
-            width: 6px;
+            width: 3px;
         }
-        .bg-critical { background-color: var(--critical); }
+        .bg-critical { background-color: var(--critical); box-shadow: 0 0 10px var(--critical); }
         .bg-high { background-color: var(--high); }
         .bg-medium { background-color: var(--medium); }
         .bg-low { background-color: var(--low); }
 
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-        .cve-id { font-size: 1.25rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem; }
+        .cve-id { font-family: 'Fira Code', monospace; font-size: 1.2rem; font-weight: 600; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 8px; }
 
-        .score-box { background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 8px; text-align: center; }
-        .score-value { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
+        .kev-label {
+            background: var(--critical);
+            color: white;
+            font-size: 0.6rem;
+            padding: 1px 6px;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); }
+        .score-box { border-left: 1px solid var(--border-color); padding-left: 0.8rem; text-align: right; }
+        .score-value { font-family: 'Fira Code', monospace; font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
+        .score-label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
 
-        .status-form select { background: var(--bg-color); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem; border-radius: 4px; font-size: 0.85rem; }
-        .btn-nist { font-size: 0.85rem; color: var(--accent); text-decoration: none; border: 1px solid var(--accent); padding: 0.4rem 0.8rem; border-radius: 4px; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 0.8rem; border-top: 1px solid var(--border-color); margin-top: 0.8rem; }
+
+        .status-form select { 
+            background: var(--input-bg); 
+            color: var(--text-primary); 
+            border: 1px solid var(--border-color); 
+            padding: 0.3rem; 
+            font-family: 'Fira Code', monospace; 
+            font-size: 0.7rem; 
+            outline: none; 
+            cursor: pointer; 
+        }
+        .status-form select option { 
+            background: var(--bg-color); 
+            color: var(--text-primary); 
+        }
+        .btn-nist { 
+            font-family: 'Fira Code', monospace; 
+            font-size: 0.65rem; 
+            color: var(--accent); 
+            text-decoration: none; 
+            border: 1px solid var(--accent); 
+            padding: 0.3rem 0.6rem; 
+            transition: all 0.2s; 
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%); 
+            background: transparent;
+            cursor: pointer;
+            outline: none;
+        }
+        .btn-nist:hover { background: var(--accent); color: var(--text-on-accent); box-shadow: 0 0 10px var(--accent); }
+        .metrics-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+        .chart-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; height: 180px; }
     </style>
 </head>
 <body id="main-body">
     <div class="container">
         <header>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>Monitor de Amenazas</h1>
-                <a href="{% url 'home' %}" style="color: var(--text-secondary); text-decoration: none;">← Volver al Inicio</a>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h1>FLUJO DE MONITOREO</h1>
+                <div style="display:flex; gap: 0.5rem;">
+                    <button onclick="generateShiftReport()" class="btn-nist" style="border-color: var(--high); color: var(--high);">[ GENERAR REPORTE DE TURNO ]</button>
+                    <a href="{% url 'home' %}" style="font-family: 'Fira Code', monospace; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; display: flex; align-items: center; border: 1px solid transparent; padding: 0 0.5rem;">[ VOLVER AL MENÚ ]</a>
+                </div>
             </div>
+
+            <div class="metrics-container">
+                <div class="chart-box">
+                    <canvas id="mttaChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="mttrChart"></canvas>
+                </div>
+            </div>
+
+            <div id="sync-notification-area"></div>
 
             {% if messages %}
                 {% for message in messages %}
-                <div style="background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #22c55e; width: 100%; text-align: center;">{{ message }}</div>
+                <div class="system-msg" style="font-family: 'Fira Code', monospace; border: 1px solid var(--accent); color: var(--accent); padding: 0.8rem; margin-top: 1rem; text-align: center; font-size: 0.9rem;">> {{ message }}</div>
                 {% endfor %}
             {% endif %}
 
-            <form class="search-form" action="{% url 'dashboard' %}" method="get">
-                <input type="text" name="q" placeholder="Buscar por CVE ID o descripción..." value="{{ query|default:'' }}">
-                <button type="submit">Buscar ahora</button>
-            </form>
+            <div class="search-bar-container" style="display: flex; align-items: center; gap: 1rem; margin: 2rem 0;">
+                <form class="search-form" action="{% url 'dashboard' %}" method="get" style="flex: 1; margin: 0;">
+                    <input type="text" name="q" placeholder="Ejecutar búsqueda: ID o descripción..." value="{{ query|default:'' }}">
+                    <button type="submit">BUSCAR</button>
+                </form>
+                
+                <div style="margin: 0;">
+                    <button id="ajax-sync-btn" class="btn-nist" style="background: transparent; color: var(--accent); padding: 0.6rem 1.2rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <span>🔄</span> [ REFRESCAR SINCRONIZACIÓN ]
+                    </button>
+                </div>
+            </div>
         </header>
 
         {% for cve in cves %}
@@ -115,57 +215,221 @@
             
             <div class="card-header">
                 <div>
-                    <a href="https://nvd.nist.gov/vuln/detail/{{ cve.cve_id }}" target="_blank" class="cve-id">{{ cve.cve_id }}</a>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Publicado: {{ cve.published_date }}</div>
+                    <a href="https://nvd.nist.gov/vuln/detail/{{ cve.cve_id }}" target="_blank" class="cve-id">
+                        {{ cve.cve_id }}
+                        {% if cve.cisa_kev %}
+                            <span class="kev-label">🔥 KEV EXPLOTADA</span>
+                        {% endif %}
+                    </a>
+                    <div style="font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
+                        PUBLICACIÓN: {{ cve.published_date }}
+                        {% if cve.severity == 'CRITICAL' and cve.status == 'PENDING' %}
+                            | <span class="sla-timer" data-start="{{ cve.created_at|date:'c' }}">TIEMPO SLA: --:--</span>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="score-box">
                     <div class="score-value">{{ cve.cvss_score }}</div>
-                    <div class="score-label">CVSS</div>
+                    <div class="score-label">ÍNDICE CVSS</div>
                 </div>
             </div>
 
-            <p style="line-height: 1.6; color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">{{ cve.description }}</p>
+            <p style="line-height: 1.6; color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem; border-left: 2px solid var(--border-color); padding-left: 1rem;">{{ cve.description }}</p>
 
             <div class="card-footer">
                 <form action="{% url 'update_status' cve.pk %}" method="post" class="status-form">
                     {% csrf_token %}
-                    <span style="font-size: 0.8rem; color: var(--text-secondary); margin-right: 0.5rem;">Gestión:</span>
+                    <span style="font-family: 'Fira Code', monospace; font-size: 0.7rem; color: var(--text-secondary); margin-right: 0.5rem;">ESTADO:</span>
                     <select name="status" onchange="this.form.submit()">
-                        <option value="PENDING" {% if cve.status == 'PENDING' %}selected{% endif %}>Pendiente</option>
-                        <option value="INVESTIGATING" {% if cve.status == 'INVESTIGATING' %}selected{% endif %}>Investigando</option>
-                        <option value="FALSE_POSITIVE" {% if cve.status == 'FALSE_POSITIVE' %}selected{% endif %}>Falso Positivo</option>
-                        <option value="RESOLVED" {% if cve.status == 'RESOLVED' %}selected{% endif %}>Resuelto</option>
+                        <option value="PENDING" {% if cve.status == 'PENDING' %}selected{% endif %}>PENDIENTE</option>
+                        <option value="INVESTIGATING" {% if cve.status == 'INVESTIGATING' %}selected{% endif %}>INVESTIGANDO</option>
+                        <option value="FALSE_POSITIVE" {% if cve.status == 'FALSE_POSITIVE' %}selected{% endif %}>FALSO_POSITIVO</option>
+                        <option value="RESOLVED" {% if cve.status == 'RESOLVED' %}selected{% endif %}>RESUELTO</option>
                     </select>
                 </form>
 
-                <div style="display:flex; gap: 0.5rem;">
-                    <a href="https://nvd.nist.gov/vuln/detail/{{ cve.cve_id }}" target="_blank" class="btn-nist">Ver en NIST</a>
-                    <a href="https://www.exploit-db.com/search?cve={{ cve.cve_id }}" target="_blank" class="btn-nist" style="border-color: #f97316; color: #f97316;">Exploit-DB</a>
+                <div style="display:flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="markFalsePositive(this, {{ cve.pk }})" class="btn-nist" style="border-color: #94a3b8; color: #94a3b8;">FALSO POSITIVO</button>
+                    <button onclick="showPlaybook({{ cve.pk }})" class="btn-nist" style="border-color: #a855f7; color: #a855f7;">PLAYBOOK.SH</button>
+                    <a href="https://nvd.nist.gov/vuln/detail/{{ cve.cve_id }}" target="_blank" class="btn-nist">NVD_DB</a>
+                    <a href="https://github.com/search?q={{ cve.cve_id }}" target="_blank" class="btn-nist" style="border-color: #6366f1; color: #6366f1;">GITHUB_OSINT</a>
+                    <a href="https://www.exploit-db.com/search?cve={{ cve.cve_id }}" target="_blank" class="btn-nist" style="border-color: #f97316; color: #f97316;">EXPLOIT_DB</a>
                 </div>
+            </div>
+
+            <!-- Auditoría y Notas -->
+            <div style="margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-color); font-size: 0.8rem;">
+                <div style="font-family: 'Fira Code', monospace; color: var(--accent); margin-bottom: 0.5rem;">[ REGISTRO DE AUDITORÍA ]</div>
+                <div id="notes-list-{{ cve.pk }}" style="margin-bottom: 0.5rem; max-height: 100px; overflow-y: auto;">
+                    {% for note in cve.incident_notes.all %}
+                        <div style="color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 2px 0;">
+                            <span style="color: var(--accent);">[{{ note.created_at|date:'H:i' }}]</span> {{ note.note }}
+                        </div>
+                    {% empty %}
+                        <div style="color: var(--text-secondary); opacity: 0.5;">No hay notas registradas.</div>
+                    {% endfor %}
+                </div>
+                <form action="{% url 'add_note' cve.pk %}" method="post" style="display: flex; gap: 0.5rem; margin-top: 0.8rem;">
+                    {% csrf_token %}
+                    <input type="text" name="note" placeholder="Escribir nota de auditoría..." style="flex: 1; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; font-size: 0.75rem; font-family: 'Fira Code', monospace; outline: none; border-radius: 2px;">
+                    <button type="submit" class="btn-nist" style="padding: 0 1rem; height: 32px; display: flex; align-items: center; justify-content: center;">ADD</button>
+                </form>
             </div>
         </div>
         {% empty %}
-        <div style="text-align: center; color: var(--text-secondary); padding: 4rem;">No se encontraron amenazas.</div>
+        <div style="font-family: 'Fira Code', monospace; text-align: center; color: var(--text-secondary); padding: 4rem;">[!] NO SE ENCONTRARON AMENAZAS EN LA BASE DE DATOS</div>
         {% endfor %}
     </div>
-
-    <footer style="margin-top: 5rem; padding: 2rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); width: 100%; color: var(--text-secondary); font-size: 0.9rem;">
-        Desarrollado por <a href="https://www.linkedin.com/in/juanjoseranea/" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">Juan Jose Ranea</a> | &copy; 2026 Security Hub SOC
-    </footer>
 
     <script>
         function setTheme(theme) {
             const body = document.getElementById('main-body');
             body.classList.remove('light-theme', 'grayscale-theme');
-            if (theme !== 'dark') {
-                body.classList.add(theme + '-theme');
+            if (theme !== 'dark') body.classList.add(theme + '-theme');
+            localStorage.setItem('theme', theme);
+        }
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) setTheme(savedTheme);
+
+        // Chart Initialization
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } }
+        };
+
+        new Chart(document.getElementById('mttaChart'), {
+            type: 'bar',
+            data: {
+                labels: ['MTTA (Tiempo Recon.)'],
+                datasets: [{
+                    label: 'Minutos',
+                    data: [{{ metrics.mtta|default:0 }}],
+                    backgroundColor: '#38bdf8'
+                }]
+            },
+            options: commonOptions
+        });
+
+        new Chart(document.getElementById('mttrChart'), {
+            type: 'bar',
+            data: {
+                labels: ['MTTR (Tiempo Resol.)'],
+                datasets: [{
+                    label: 'Minutos',
+                    data: [{{ metrics.mttr|default:0 }}],
+                    backgroundColor: '#10b981'
+                }]
+            },
+            options: commonOptions
+        });
+
+        // SLA Timer Logic
+        function updateSLATimers() {
+            const now = new Date();
+            document.querySelectorAll('.sla-timer').forEach(timer => {
+                const startTime = new Date(timer.dataset.start);
+                const diffMs = now - startTime;
+                const diffMins = Math.floor(diffMs / 60000);
+                const secs = Math.floor((diffMs % 60000) / 1000);
+                
+                timer.innerText = `TIEMPO SLA: ${diffMins}:${secs < 10 ? '0' : ''}${secs}`;
+                
+                if (diffMins >= 15) {
+                    timer.style.color = '#ff0000';
+                    timer.style.fontWeight = 'bold';
+                    timer.classList.add('blink-fast');
+                }
+            });
+        }
+        setInterval(updateSLATimers, 1000);
+
+        // Playbook Preview
+        async function showPlaybook(pk) {
+            try {
+                const response = await fetch(`/get-playbook/${pk}/`);
+                const data = await response.json();
+                
+                const playbookHtml = `
+                    ESTRATEGIA DE MITIGACIÓN PARA: ${data.tech}\n
+                    ${data.steps.join('\n')}
+                `;
+                alert(playbookHtml);
+            } catch (err) {
+                console.error("Error cargando playbook:", err);
+                alert("E_PLAYBOOK_NOT_LOADED");
             }
         }
 
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme);
+        // AJAX False Positive
+        async function markFalsePositive(btn, pk) {
+            if(!confirm("¿Confirmar este incidente como falso positivo?")) return;
+            try {
+                const response = await fetch(`/mark-false-positive/${pk}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                });
+                if(response.ok) {
+                    const card = btn.closest('.card');
+                    card.style.transition = 'all 0.5s';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(50px)';
+                    setTimeout(() => card.remove(), 500);
+                }
+            } catch (err) { alert("Error al procesar falso positivo."); }
         }
+
+        // Shift Report
+        async function generateShiftReport() {
+            try {
+                const response = await fetch('/shift-report/');
+                const data = await response.json();
+                alert(data.report);
+            } catch (err) { alert("Error al generar reporte."); }
+        }
+
+        // AJAX Manual Sync
+        document.getElementById('ajax-sync-btn')?.addEventListener('click', function() {
+            const btn = this;
+            const notificationArea = document.getElementById('sync-notification-area');
+            
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.innerHTML = '<span>⏳</span> [ SINCRONIZANDO... ]';
+
+            fetch("{% url 'trigger_manual_sync' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const msg = document.createElement('div');
+                msg.className = 'system-msg';
+                msg.style = "font-family: 'Fira Code', monospace; background: rgba(0, 242, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 0.8rem; margin-bottom: 1rem; text-align: center; font-size: 0.9rem; animation: pulse-fuego 2s infinite;";
+                msg.innerHTML = `> SEÑAL RECIBIDA: ${data.message}`;
+                notificationArea.appendChild(msg);
+
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.innerHTML = '<span>🔄</span> [ REFRESCAR SINCRONIZACIÓN ]';
+                }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('E_CONNECTION_FAILED: No se pudo contactar con el núcleo SOC.');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.innerHTML = '<span>🔄</span> [ SYNC_REFRESH ]';
+            });
+        });
     </script>
+    <footer style="margin-top: 5rem; padding: 2rem; text-align: left; border-top: 1px solid var(--border-color); width: 100%; color: var(--text-secondary); font-family: 'Fira Code', monospace; font-size: 0.7rem; opacity: 0.8;">
+        v2.5.0 :: DESARROLLADO POR: <a href="https://www.linkedin.com/in/juanjoseranea/" target="_blank" style="color: var(--accent); text-decoration: none;">JUAN JOSÉ RANEA</a> :: // 2026
+    </footer>
 </body>
 </html>

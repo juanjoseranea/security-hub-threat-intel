@@ -2,6 +2,7 @@ import requests
 import logging
 from celery import shared_task
 from .models import CVE
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,9 @@ def fetch_nvd_python_cves():
     Obtiene vulnerabilidades relacionadas con 'python' desde la API de NVD (NIST)
     incluyendo puntuaciones CVSS y severidad.
     """
+    with open('auditoria_bots.log', 'a') as f:
+        f.write(f"[{datetime.now()}] START_TASK: fetch_nvd_python_cves\n")
+
     url = "https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=python&resultsPerPage=20"
     try:
         response = requests.get(url, timeout=20, headers={'User-Agent': 'Mozilla/5.0'})
@@ -74,8 +78,54 @@ def fetch_nvd_python_cves():
             )
             count += 1
         
-        return f"Éxito: Se procesaron {count} CVEs con datos de severidad enriquecidos."
+        result = f"Éxito: Se procesaron {count} CVEs con datos de severidad enriquecidos."
+        with open('auditoria_bots.log', 'a') as f:
+            f.write(f"[{datetime.now()}] SUCCESS_TASK: fetch_nvd_python_cves - {result}\n")
+        return result
 
     except Exception as e:
+        error_msg = f"Error: {str(e)}"
+        with open('auditoria_bots.log', 'a') as f:
+            f.write(f"[{datetime.now()}] ERROR_TASK: fetch_nvd_python_cves - {error_msg}\n")
         logger.error(f"Error al conectar con la API de NVD: {e}")
-        return f"Error: {str(e)}"
+        return error_msg
+@shared_task
+def sync_cisa_kev_catalog():
+    """
+    Sincroniza el catálogo de vulnerabilidades explotadas (KEV) de CISA.
+    Si un CVE existe en nuestra DB, lo marca como KEV.
+    """
+    with open('auditoria_bots.log', 'a') as f:
+        f.write(f"[{datetime.now()}] START_TASK: sync_cisa_kev_catalog\n")
+
+    url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+    try:
+        response = requests.get(url, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+        vulnerabilities = data.get('vulnerabilities', [])
+        
+        updated_count = 0
+        for item in vulnerabilities:
+            cve_id = item.get('cveID')
+            date_added = item.get('dateAdded')
+            
+            # Actualizamos solo si el CVE ya existe en nuestra base de datos
+            # Usamos filter().update() para mayor eficiencia
+            updated = CVE.objects.filter(cve_id=cve_id).update(
+                cisa_kev=True,
+                cisa_date_added=date_added
+            )
+            if updated:
+                updated_count += updated
+                
+        result = f"CISA KEV Sync exitoso: {updated_count} vulnerabilidades marcadas como críticas."
+        with open('auditoria_bots.log', 'a') as f:
+            f.write(f"[{datetime.now()}] SUCCESS_TASK: sync_cisa_kev_catalog - {result}\n")
+        return result
+    except Exception as e:
+        error_msg = f"Error CISA: {str(e)}"
+        with open('auditoria_bots.log', 'a') as f:
+            f.write(f"[{datetime.now()}] ERROR_TASK: sync_cisa_kev_catalog - {error_msg}\n")
+        logger.error(f"Error sincronizando con CISA: {e}")
+        return error_msg

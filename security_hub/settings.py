@@ -51,6 +51,18 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'sync-nvd-every-12-hours': {
+        'task': 'vulnerabilidades.tasks.fetch_nvd_python_cves',
+        'schedule': crontab(hour='*/12', minute=0),
+    },
+    'sync-cisa-every-12-hours': {
+        'task': 'vulnerabilidades.tasks.sync_cisa_kev_catalog',
+        'schedule': crontab(hour='*/12', minute=0),
+    },
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -3,36 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Hub - Centro de Mando</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Security Hub - Terminal SOC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent: #38bdf8;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
+            --bg-color: #020408;
+            --bg-gradient: radial-gradient(circle at 50% 50%, #0d1117 0%, #020408 100%);
+            --card-bg: #0d1117;
+            --card-hover: #161b22;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b8c1;
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.4);
+            --border-color: #30363d;
+            --grid-color: rgba(0, 242, 255, 0.03);
+            --scanline-opacity: 0.15;
         }
 
-        /* Temas */
         body.light-theme {
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
+            --bg-color: #ffffff;
+            --bg-gradient: none;
+            --card-bg: #f8fafc;
+            --card-hover: #f1f5f9;
             --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --accent: #0284c7;
+            --text-secondary: #334155;
+            --accent: #024da1;
+            --accent-glow: rgba(2, 77, 161, 0.1);
+            --border-color: #e2e8f0;
+            --grid-color: rgba(2, 77, 161, 0.05);
+            --scanline-opacity: 0.02;
         }
 
         body.grayscale-theme {
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #4b5563;
-            --accent: #374151;
-            filter: grayscale(1);
+            --bg-color: #cbd5e1;
+            --bg-gradient: none;
+            --card-bg: #e2e8f0;
+            --card-hover: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --accent: #0f172a;
+            --accent-glow: rgba(0, 0, 0, 0.1);
+            --border-color: #94a3b8;
+            --grid-color: rgba(0, 0, 0, 0.05);
+            --scanline-opacity: 0.05;
         }
 
         body {
@@ -45,111 +58,220 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: background 0.3s, color 0.3s;
+            transition: all 0.3s ease;
+            /* Fondo dinámico */
+            background: var(--bg-gradient);
+            background-color: var(--bg-color);
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .container { max-width: 1000px; width: 100%; }
-
-        header { text-align: center; margin-bottom: 3rem; position: relative; }
-        h1 { font-size: 3rem; margin: 0; background: linear-gradient(to right, var(--accent), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        /* Menú de Opciones */
-        .options-menu {
-            position: absolute;
-            top: 0;
-            right: 0;
-            display: flex;
-            gap: 0.5rem;
+        /* Efecto de rejilla y líneas de escaneo */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: -1;
         }
 
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: var(--scanline-opacity);
+        }
+
+        .container { max-width: 1100px; width: 100%; z-index: 1; }
+
+        header { text-align: left; margin-bottom: 4rem; position: relative; border-left: 4px solid var(--accent); padding-left: 1.5rem; }
+        h1 { 
+            font-family: 'Fira Code', monospace;
+            font-size: 3.5rem; 
+            margin: 0; 
+            letter-spacing: -2px;
+            text-shadow: 0 0 15px var(--accent-glow);
+            color: var(--text-primary);
+        }
+
+        .options-menu { position: absolute; top: 0; right: 0; display: flex; gap: 0.3rem; }
         .theme-btn {
             background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 0.5rem;
-            border-radius: 8px;
+            padding: 0.3rem 0.6rem;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.6rem;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+            transition: all 0.2s;
         }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
         }
 
         .stat-card {
             background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.2rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 88% 100%, 0 100%);
+            backdrop-filter: blur(5px);
+        }
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, transparent 96%, var(--accent) 100%);
         }
 
-        .stat-value { font-size: 2rem; font-weight: 600; color: var(--accent); display: block; }
+        .stat-value { font-family: 'Fira Code', monospace; font-size: 2.2rem; font-weight: 600; color: var(--accent); display: block; }
+        .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); }
 
+        /* Actions Grid */
         .actions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 2rem;
         }
 
         .action-card {
             background: var(--card-bg);
-            border-radius: 16px;
-            padding: 2rem;
+            opacity: 0.9;
+            padding: 2rem 1.2rem;
             text-align: center;
             text-decoration: none;
             color: inherit;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            clip-path: polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%);
+            backdrop-filter: blur(5px);
         }
 
-        .action-card:hover { transform: translateY(-8px); border-color: var(--accent); }
+        .action-card:hover { 
+            border-color: var(--accent);
+            box-shadow: 0 0 25px var(--accent-glow);
+            transform: translateY(-5px);
+            background: var(--card-hover);
+        }
 
-        .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.9; }
+        .action-card h2 { font-family: 'Fira Code', monospace; font-size: 1.1rem; margin: 0 0 0.5rem 0; color: var(--accent); }
+        .action-card p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
 
-        /* Centro de Exportación */
-        .export-section {
-            margin-top: 4rem;
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 16px;
+        /* Sync Section - Small Buttons */
+        .sync-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .sync-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            clip-path: polygon(0% 0%, 95% 0%, 100% 25%, 100% 100%, 5% 100%, 0% 75%);
+            outline: none;
+            letter-spacing: 0.5px;
+        }
+        .sync-btn:hover { 
+            background: var(--accent); 
+            color: var(--text-on-accent); 
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+        .sync-btn.btn-kev:hover {
+            background: #da3633;
+            border-color: #da3633;
+            color: white;
+            box-shadow: 0 0 20px rgba(218, 54, 51, 0.4);
         }
 
-        .export-btns { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
-        .export-btn {
-            background: rgba(56, 189, 248, 0.1);
+        /* Export - Slim Design */
+        .export-section {
+            margin-top: 5rem;
+            background: rgba(13, 17, 23, 0.4);
+            padding: 1.5rem 2.5rem;
+            border: 1px dashed var(--border-color);
+            width: 100%;
+            position: relative;
+        }
+        .export-section::before {
+            content: "EXPORT_MODULE";
+            position: absolute;
+            top: -10px; left: 20px;
+            background: var(--bg-color);
+            padding: 0 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem;
             color: var(--accent);
-            border: 1px solid var(--accent);
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
+        }
+
+        .export-btns { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
+        .export-btn {
+            background: rgba(48, 54, 61, 0.3);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 1rem;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem;
             transition: all 0.2s;
         }
-        .export-btn:hover { background: var(--accent); color: var(--bg-color); }
+        .export-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0, 242, 255, 0.05); }
+
+        .fuego-anim { animation: pulse-fuego 2s infinite; color: var(--danger); }
+        @keyframes pulse-fuego {
+            0% { transform: scale(1); opacity: 1; text-shadow: 0 0 5px var(--danger); }
+            50% { transform: scale(1.2); opacity: 0.8; text-shadow: 0 0 15px var(--danger); }
+            100% { transform: scale(1); opacity: 1; text-shadow: 0 0 5px var(--danger); }
+        }
     </style>
 </head>
 <body id="main-body">
     <div class="container">
         <header>
             <div class="options-menu">
-                <button class="theme-btn" onclick="setTheme('dark')">🌙 Oscuro</button>
-                <button class="theme-btn" onclick="setTheme('light')">☀️ Claro</button>
-                <button class="theme-btn" onclick="setTheme('grayscale')">⚪ Gris</button>
+                <button class="theme-btn" onclick="setTheme('dark')">MODO OSCURO</button>
+                <button class="theme-btn" onclick="setTheme('light')">MODO CLARO</button>
+                <button class="theme-btn" onclick="setTheme('grayscale')">MODO GRIS</button>
             </div>
-            <h1>Security Hub</h1>
-            <p style="color: var(--text-secondary)">Centro de Inteligencia SOC L1</p>
+            <h1>SECURITY HUB</h1>
         </header>
 
         {% if messages %}
             {% for message in messages %}
-            <div style="background: rgba(34, 197, 94, 0.1); color: var(--success); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center; border: 1px solid var(--success);">{{ message }}</div>
+            <div style="font-family: 'Fira Code', monospace; background: rgba(35, 134, 54, 0.1); color: #3fb950; padding: 1rem; border: 1px solid #238636; margin-bottom: 2rem; border-left: 5px solid #238636;">
+                > {{ message }}
+            </div>
             {% endfor %}
         {% endif %}
 
@@ -160,55 +282,66 @@
             </div>
             <div class="stat-card">
                 <span class="stat-value" style="color: var(--danger)">{{ stats.severity.CRITICAL|default:0 }}</span>
-                <span class="stat-label">Críticas</span>
+                <span class="stat-label">Alertas Críticas</span>
             </div>
             <div class="stat-card">
                 <span class="stat-value" style="color: var(--warning)">{{ stats.severity.HIGH|default:0 }}</span>
-                <span class="stat-label">Alta Prioridad</span>
+                <span class="stat-label">Riesgo Alto</span>
             </div>
             <div class="stat-card">
-                <span class="stat-value" style="color: var(--success)">{{ stats.status.RESOLVED|default:0 }}</span>
-                <span class="stat-label">Resueltas</span>
+                <span class="stat-value" style="color: #3fb950">{{ stats.status.RESOLVED|default:0 }}</span>
+                <span class="stat-label">Nodos Resueltos</span>
             </div>
         </div>
 
         <div class="actions-grid">
             <a href="{% url 'dashboard' %}" class="action-card">
-                <div class="icon">🔍</div>
-                <h2>Explorar Amenazas</h2>
-                <p>Monitor de vulnerabilidades y gestión de incidentes.</p>
+                <div class="icon">📡</div>
+                <h2>MONITOR DE AMENAZAS</h2>
+                <p>Análisis en tiempo real de alertas y flujo de incidentes.</p>
             </a>
 
-            <form action="{% url 'sync' %}" method="post" style="display: contents;">
-                {% csrf_token %}
-                <button type="submit" class="action-card" style="background: none; font-family: inherit; width: 100%;">
-                    <div class="icon">🔄</div>
-                    <h2>Sincronizar API</h2>
-                    <p>Obtener últimos datos reales desde NVD (NIST).</p>
-                </button>
-            </form>
+            <div class="action-card" style="cursor: default; padding-bottom: 1.5rem;">
+                <div class="icon">⚡</div>
+                <h2>ACTUALIZAR DATOS</h2>
+                <p>Descarga las últimas vulnerabilidades de fuentes oficiales.</p>
+                
+                <div class="sync-container" style="grid-template-columns: 1fr; gap: 0.8rem; margin-top: 1.5rem;">
+                    <form action="{% url 'sync' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="sync-btn" title="Sincronizar con base de datos NVD">
+                            SINCRONIZAR NVD
+                        </button>
+                    </form>
+                    <form action="{% url 'sync_cisa' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="sync-btn btn-kev" title="Sincronizar con base de datos CISA KEV" style="border-color: #da3633; color: #da3633;">
+                            SINCRONIZAR KEV
+                        </button>
+                    </form>
+                </div>
+            </div>
 
             <a href="{% url 'status' %}" class="action-card">
-                <div class="icon">📊</div>
-                <h2>Salud del Sistema</h2>
-                <p>Logs de tareas de Celery y estado del trabajador.</p>
+                <div class="icon">⚙️</div>
+                <h2>ESTADO DEL NÚCLEO</h2>
+                <p>Registros del trabajador Celery y latencia del sistema.</p>
             </a>
         </div>
 
         <div class="export-section">
-            <h3>📥 Exportar Reportes de Inteligencia</h3>
-            <p style="color: var(--text-secondary); font-size: 0.9rem;">Genera un archivo CSV con las amenazas detectadas en el periodo seleccionado.</p>
+            <h3 style="font-family: 'Fira Code', monospace; margin: 0; font-size: 1.1rem;">VOLCADO DE DATOS :: EXPORTAR CSV</h3>
             <div class="export-btns">
-                <a href="{% url 'export_csv' %}?days=7" class="export-btn">Últimos 7 días</a>
-                <a href="{% url 'export_csv' %}?days=14" class="export-btn">Últimos 14 días</a>
-                <a href="{% url 'export_csv' %}?days=30" class="export-btn">Últimos 30 días</a>
-                <a href="{% url 'export_csv' %}?days=all" class="export-btn" style="border-color: #818cf8; color: #818cf8;">Histórico Completo</a>
+                <a href="{% url 'export_csv' %}?days=7" class="export-btn">REGISTROS 7 DÍAS</a>
+                <a href="{% url 'export_csv' %}?days=14" class="export-btn">REGISTROS 14 DÍAS</a>
+                <a href="{% url 'export_csv' %}?days=30" class="export-btn">REGISTROS 30 DÍAS</a>
+                <a href="{% url 'export_csv' %}?days=all" class="export-btn" style="border-color: var(--accent); color: var(--accent);">VOLCADO HISTÓRICO COMPLETO</a>
             </div>
         </div>
     </div>
 
-    <footer style="margin-top: 5rem; padding: 2rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); width: 100%; color: var(--text-secondary); font-size: 0.9rem;">
-        Desarrollado por <a href="https://www.linkedin.com/in/juanjoseranea/" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">Juan Jose Ranea</a> | &copy; 2026 Security Hub SOC
+    <footer style="margin-top: 5rem; padding: 2rem; text-align: left; border-top: 1px solid var(--border-color); width: 100%; color: var(--text-secondary); font-family: 'Fira Code', monospace; font-size: 0.7rem;">
+        v2.5.0 :: DESARROLLADO POR: <a href="https://www.linkedin.com/in/juanjoseranea/" target="_blank" style="color: var(--accent); text-decoration: none;">JUAN JOSÉ RANEA</a> :: // 2026
     </footer>
 
     <script>
@@ -220,12 +353,8 @@
             }
             localStorage.setItem('theme', theme);
         }
-
-        // Cargar tema guardado
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme);
-        }
+        if (savedTheme) setTheme(savedTheme);
     </script>
 </body>
 </html>
